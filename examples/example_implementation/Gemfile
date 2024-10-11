@@ -1,0 +1,16 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "dotenv", "~> 3.1"
+gem "pg", "~> 1.5"
+gem "pgvector", "~> 0.3.2"
+gem "rails", "~> 8.0.0.beta1"
+gem "ruby-openai", "~> 7.2"
+gem "search_by_ai", path: "../../"
+gem "sqlite3", ">= 2.1"
+
+group :development, :test do
+  gem "debug", platforms: %i[mri windows], require: "debug/prelude"
+end
+

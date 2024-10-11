@@ -1,43 +1,89 @@
-# SearchByAi
+# SearchByAI
 
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/search_by_ai`. To experiment with that code, run `bin/console` for an interactive prompt.
+Basic demonstration of gem to add vector embedding search to any model.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+1. Add `search_by_ai` gem
 
-Install the gem and add to the application's Gemfile by executing:
+2. Launch the installer
 
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
+    ```bash
+    rake search_by_ai:install
+    # creates db/[timestamp]_create_ai_embedding_contents.rb
+    rake db:migrate
+    ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+2. Set your initializer
 
-```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-```
+    ```ruby
+    # config/initializers/search_by_ai.rb
+    SearchByAI.configure do |config|
+      config.api_key = ENV["OPENAI_SECRET_KEY"]
+    end
+    ```
+
+2. Add it to your model
+
+    ```ruby
+    # app/models/book.rb
+    class Book < ApplicationRecord
+      include SearchByAI::Model
+    end
+    ```
+
 
 ## Usage
 
-TODO: Write usage instructions here
+### Basic usage
 
-## Development
+```ruby
+# bundle exec rails c
+Book.all.map(&:reindex_search_by_ai_content) # Calls OpenAI
+books = Book.where(...).search_with_ai('best scientific novels')
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+### Customize content
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+You can ovveride `#search_by_ai_content` method (defaults to `as_json` if not implemented):
 
-## Contributing
+```ruby
+class Book < ApplicationRecord
+  include SearchByAI::Model
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/search_by_ai. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/search_by_ai/blob/main/CODE_OF_CONDUCT.md).
+  private
 
-## License
+  def search_by_ai_content
+    {
+      name:,
+      description:,
+      book_comments: book_comments.map do |bc|
+        {
+          comment: bc.comment,
+        }
+      end,
+    }
+  end
+end
+```
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+## Full Example
 
-## Code of Conduct
+Look in examples/example_implementation for a full example.
 
-Everyone interacting in the SearchByAi project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/search_by_ai/blob/main/CODE_OF_CONDUCT.md).
+Files Overview:
+
+```
+  /examples/example_implementation
+    /config/initializers
+      - search_by_ai.rb
+    /app/models
+      - book.rb
+    /db/migrate
+      - [...]_create_books.rb
+      - [...]_create_ai_embedding_contents.rb
+```
+
+### Notes
+
+- The models are stored in `SearchByAI::AIEmbeddingContent` (ActiveRecord class)
