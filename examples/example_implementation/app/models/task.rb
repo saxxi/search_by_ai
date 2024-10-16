@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-class Book < ApplicationRecord
+class Task < ApplicationRecord
   include SearchByAI::Model
 end

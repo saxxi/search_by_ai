@@ -2,6 +2,13 @@
 
 Basic demonstration of gem to add vector embedding search to any model.
 
+## Postgres + PGVector setup
+
+```bash
+docker-compose up --build
+docker-compose exec postgres psql -U postgres -c "CREATE EXTENSION vector;"
+```
+
 ## Installation
 
 1. Add `search_by_ai` gem
@@ -26,8 +33,8 @@ Basic demonstration of gem to add vector embedding search to any model.
 2. Add it to your model
 
     ```ruby
-    # app/models/book.rb
-    class Book < ApplicationRecord
+    # app/models/task.rb
+    class Task < ApplicationRecord
       include SearchByAI::Model
     end
     ```
@@ -39,16 +46,16 @@ Basic demonstration of gem to add vector embedding search to any model.
 
 ```ruby
 # bundle exec rails c
-Book.all.map(&:reindex_search_by_ai_content) # Calls OpenAI
-books = Book.where(...).search_with_ai('best scientific novels')
+Task.all.map(&:reindex_search_by_ai_content) # Calls OpenAI
+tasks = Task.where(organization_id: 'Red').search_with('installing a bathtub')
 ```
 
 ### Customize content
 
-You can ovveride `#search_by_ai_content` method (defaults to `as_json` if not implemented):
+You can override `#search_by_ai_content` method (defaults to `as_json` if not implemented):
 
 ```ruby
-class Book < ApplicationRecord
+class Task < ApplicationRecord
   include SearchByAI::Model
 
   private
@@ -57,9 +64,9 @@ class Book < ApplicationRecord
     {
       name:,
       description:,
-      book_comments: book_comments.map do |bc|
+      task_comments: task_comments.map do |tc|
         {
-          comment: bc.comment,
+          comment: tc.comment,
         }
       end,
     }
@@ -78,9 +85,9 @@ Files Overview:
     /config/initializers
       - search_by_ai.rb
     /app/models
-      - book.rb
+      - task.rb
     /db/migrate
-      - [...]_create_books.rb
+      - [...]_create_tasks.rb
       - [...]_create_ai_embedding_contents.rb
 ```
 
